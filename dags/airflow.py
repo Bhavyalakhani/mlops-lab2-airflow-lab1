@@ -6,8 +6,8 @@ from src.lab import load_data, data_preprocessing, build_save_model, load_model_
 
 # Define default arguments for your DAG
 default_args = {
-    'owner': 'your_name',
-    'start_date': datetime(2025, 1, 15),
+    'owner': 'Bhavya Lakhani',
+    'start_date': datetime(2025, 2, 9),
     'retries': 0,  # Number of retries in case of task failure
     'retry_delay': timedelta(minutes=5),  # Delay before retries
 }
