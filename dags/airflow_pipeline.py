@@ -2,14 +2,14 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
-from src.lab import load_data, data_preprocessing, build_save_model, load_model_elbow
+from src.lab import load_data, data_preprocessing, build_save_model, load_model_and_predict
 
 # Define default arguments for your DAG
 default_args = {
     'owner': 'Bhavya Lakhani',
-    'start_date': datetime(2025, 2, 9),
-    'retries': 0,  # Number of retries in case of task failure
-    'retry_delay': timedelta(minutes=5),  # Delay before retries
+    'start_date': datetime(2026, 2, 9),
+    'retries': 0,
+    'retry_delay': timedelta(minutes=5),
 }
 
 with DAG(
@@ -36,13 +36,13 @@ with DAG(
         op_args=[data_preprocessing_task.output, "wine_dataset_classification_model.pkl"],
     )
 
-    load_model_task = PythonOperator(
-        task_id='load_model_task',
-        python_callable=load_model_elbow,
+    load_model_and_predict_task = PythonOperator(
+        task_id='load_model_and_predict_task',
+        python_callable=load_model_and_predict,
         op_args=["wine_dataset_classification_model.pkl", build_save_model_task.output],
     )
 
-    load_data_task >> data_preprocessing_task >> build_save_model_task >> load_model_task
+    load_data_task >> data_preprocessing_task >> build_save_model_task >> load_model_and_predict_task
 
 if __name__ == "__main__":
     dag.test()

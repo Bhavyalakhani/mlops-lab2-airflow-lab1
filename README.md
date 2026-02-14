@@ -51,6 +51,8 @@ docker compose up -d
 Once the Airflow stack is running you can open the Airflow web UI at:
 
 - http://localhost:8080
+- username : airflow2
+- password : airflow2
 
 The DAG in this repository is named `wine_dataset_clustering_airflow`. In the UI you can:
 

@@ -42,13 +42,11 @@ def data_preprocessing(data_b64: str):
     
     logger.info("data_preprocessing: input shape=%s, features=%d", df.shape, len(feature_cols))
     
-    # Apply StandardScaler for z-score normalization
     scaler = StandardScaler()
     scaled_data = scaler.fit_transform(features_data)
     
     logger.info("data_preprocessing: scaled with StandardScaler, output shape=%s", scaled_data.shape)
     
-    # Save scaler for prediction task
     model_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model")
     os.makedirs(model_dir, exist_ok=True)
     scaler_file = os.path.join(model_dir, "scaler.pkl")
@@ -84,7 +82,6 @@ def build_save_model(data_b64: str, filename: str):
     
     logger.info("build_save_model: training complete, losses=%s", losses[:5])
     
-    # Detect optimal k with elbow method
     try:
         knee = KneeLocator(list(k_search), losses, curve="convex", direction="decreasing")
         best_k = int(knee.elbow) if knee.elbow is not None else 3
@@ -109,31 +106,20 @@ def build_save_model(data_b64: str, filename: str):
     return losses
 
 
-def load_model_elbow(filename: str, losses: list):
+def load_model_and_predict(filename: str, losses: list):
     """Load model, recompute elbow, scale and predict on Wine data."""
     logger.info("load_model_elbow: received losses, size=%d bytes", len(pickle.dumps(losses)))
-    # Load trained model
     model_path = os.path.join(os.path.dirname(__file__), "../model", filename)
     with open(model_path, "rb") as f:
         trained_model = pickle.load(f)
     
-    logger.info("load_model_elbow: loaded model from %s", model_path)
+    logger.info("load_model_and_predict: loaded model from %s", model_path)
     
-    # Recompute elbow analysis
-    k_range = list(range(1, len(losses) + 1))
-    try:
-        knee = KneeLocator(k_range, losses, curve="convex", direction="decreasing")
-        logger.info("load_model_elbow: elbow suggests k=%s", knee.elbow)
-    except Exception as e:
-        logger.warning("load_model_elbow: elbow detection failed (%s)", e)
-    
-    # Load Wine dataset and prepare for prediction
     wine = load_wine()
     raw_data = wine.data
     
-    logger.info("load_model_elbow: loaded Wine data, shape=%s", raw_data.shape)
+    logger.info("load_model_and_predict: loaded Wine data, shape=%s", raw_data.shape)
     
-    # Load and apply saved scaler
     scaler_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model", "scaler.pkl")
     
     if os.path.exists(scaler_path):
@@ -146,14 +132,13 @@ def load_model_elbow(filename: str, losses: list):
         except Exception:
             scaled_data = scaler.transform(raw_data)
         
-        logger.info("load_model_elbow: scaled data with saved scaler, shape=%s", scaled_data.shape)
+        logger.info("scaled data with saved scaler, shape=%s", scaled_data.shape)
     else:
         scaled_data = raw_data
-        logger.warning("load_model_elbow: scaler not found, using raw data")
+        logger.warning("load_model_and_predict: scaler not found, using raw data")
     
-    # Predict
     pred = trained_model.predict(scaled_data)[0]
-    logger.info("load_model_elbow: prediction made, cluster=%s, data_size=%s", pred, scaled_data.size)
+    logger.info("load_model_and_predict: prediction made, cluster=%s, data_size=%s", pred, scaled_data.size)
     result = int(pred)
     logger.info("response size=%d bytes", len(pickle.dumps(result)))
     return result
